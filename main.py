@@ -131,7 +131,7 @@ def processMarkdown(mdp):
     yaml_pattern = r'^---\n(.*?)\n---'  # Regex to capture everything between '---' lines
     match = re.search(yaml_pattern, raw_markdown, re.DOTALL)
     raw_markdown_no_yaml = re.sub(yaml_pattern, '', raw_markdown, flags=re.DOTALL)
-    post_id = ''
+    post_id = -1
     tags_array = []
 
     if match:

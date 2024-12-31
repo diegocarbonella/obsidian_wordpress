@@ -120,9 +120,9 @@ def replace_with_img_tag(match):
     return f'<img src="{wordpress_path}{filename}"/>'
 
 
-def processMarkdown(md_path):
+def processMarkdown(mdp):
 
-    with open(md_path, 'r') as file:
+    with open(mdp, 'r') as file:
         filedata = file.read()
 
     filedata = markdown.markdown(filedata)
@@ -136,20 +136,12 @@ def processMarkdown(md_path):
 
 
 
-def sendNewPost(content, title, username, password, mainurl):
+def sendNewPost(postData):
 
     url = mainurl + "/wp-json/wp/v2/posts" 
-    # Headers
+
     headers = {
         "Content-Type": "application/json"
-    }
-
-    # Data
-    data = {
-        "content": content,
-        "title" : title,
-        "slug" : title,
-        "status" : "publish"
     }
 
     # Make the POST request
@@ -157,18 +149,13 @@ def sendNewPost(content, title, username, password, mainurl):
         url,
         auth=HTTPBasicAuth(username, password),
         headers=headers,
-        json=data  # Automatically converts the dictionary to JSON
+        json=postData  # Automatically converts the dictionary to JSON
     )
 
-    # Output the response
-    if response.status_code == 200 or response.status_code == 201:
-        #print(response.text)
-        print("Post updated successfully!")
-    else:
-        print(f"Error: {response.status_code}, {response.text}")
+    return response
 
 
-def sftpupload(md_path):
+def sftpupload(mdp):
 
     parsed_url = urlparse(SFTPTOGO_URL)
 
@@ -181,9 +168,7 @@ def sftpupload(md_path):
     # Connect to SFTP
     sftp.connect()
 
-
-
-    arr = get_filenames(md_path)
+    arr = get_filenames(mdp)
 
     for image_name2 in arr:
         local_path = images_path + f"{image_name2}.png"
@@ -200,11 +185,23 @@ def sftpupload(md_path):
     # Disconnect from SFTP
     sftp.disconnect()
 
-def postUpload(md_path):
-    content = processMarkdown(md_path)
-    #print(content)
-    title = Path(md_path).stem
-    sendNewPost(content,title, username, password, mainurl)
+def postUpload(content, title, status, categories):
+
+    postData = {
+        "content": content,
+        "title" : title,
+        "slug" : mainurl,
+        "status" : status,
+        "categories" : categories,
+    }
+
+    response = sendNewPost(postData)
+
+    # Output the response
+    if response.status_code == 200 or response.status_code == 201:
+        print("Post updated successfully!")
+    else:
+        print(f"Error: {response.status_code}, {response.text}")
 
 ################################################################################################################
 ################################################################################################################
@@ -214,24 +211,30 @@ def postUpload(md_path):
 def main():
 
     parser = argparse.ArgumentParser(description="Process some paths.")
-    parser.add_argument('--md_path', type=str, help="Path to the file")
-    parser.add_argument('--opt', type=str, help="Options: u = upload post, i = upload images")
+    parser.add_argument('--mdp', type=str, help="Path to the markdown file.")
+    parser.add_argument('--opt', type=str, help="Options: u = upload post, i = upload images, d = draft.")
+    parser.add_argument('--cat', type=str, help="Post Categories.")
     args = parser.parse_args()
-    md_path = args.md_path
+
+    mdp = args.mdp
     opt = args.opt
+    cat = args.cat
     UPLOAD_POST = False
     UPLOAD_IMAGES = False
     VERBOSE = False
+    STATUS = 'publish'
+    CATEGORIES = []
 
-    #print(md_path)
-
-    if md_path == None:
+    if mdp == None:
         print('Please provide a valid path.')
         return
 
     if opt == None:
         print('Please provide options.')
         return
+
+    if cat != None:
+        CATEGORIES = list(map(int, cat.split(',')))
 
     if opt.find("u") > -1:
         UPLOAD_POST = True
@@ -242,15 +245,20 @@ def main():
     if opt.find("v") > -1:
         VERBOSE = True
 
+    if opt.find("d") > -1:
+        STATUS = 'draft'
+
     if UPLOAD_POST:
         print("Uploading post...")
-        postUpload(md_path)
+        content = processMarkdown(mdp)
+        title = Path(mdp).stem
+        postUpload(content, title, STATUS, CATEGORIES)
 
     if UPLOAD_IMAGES:
         print("Uploading images...")
-        sftpupload(md_path)
+        sftpupload(mdp)
 
     print("Finish script.")
 
-md_path = ''
+mdp = ''
 main()

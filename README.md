@@ -5,7 +5,14 @@ Using WordPress API to post content and SFTP to upload images to WordPress serve
 
 ## Example usage
 
-``python3 main.py --mdp='/home/MyMarkdownFile.md' --opt='ui'``
+```
+ # The content of the file will be the markdown file content. 
+ # The name of the file will be the WordPress post title.
+ # Upload post and images.
+ python3 main.py --mdp='/home/Last update about NEW features.md' --opt='ui'
+ # Upload only post, draft mode, categories.
+ python3 main.py --mdp='/home/NEWS about last update.md' --opt='ud' --cat=89,78
+```
 
 ## Installation
 
@@ -31,7 +38,9 @@ Send WordPress categories. Send categories ids.
 
 It is possible to read the yaml [properties](https://help.obsidian.md/Editing+and+formatting/Properties) of the Obsidian markdown files.
 - post_id = the WordPress post id. Useful to update content.
-- tags = WIP. 
+- tags = WIP.
+- short_description = WIP.
+- custom_title = WIP.
 
 ## Requirements 
 

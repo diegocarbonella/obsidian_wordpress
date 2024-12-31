@@ -225,7 +225,7 @@ def main():
 
     #print(md_path)
 
-    if md_path == None or opt == None :
+    if md_path == None:
         print('Please provide a valid path.')
         return
 

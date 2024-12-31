@@ -5,6 +5,9 @@ import re
 import argparse
 import markdown
 import requests
+import json
+import re
+import yaml
 from requests.auth import HTTPBasicAuth
 from pathlib import Path
 from urllib.parse import urlparse
@@ -123,22 +126,45 @@ def replace_with_img_tag(match):
 def processMarkdown(mdp):
 
     with open(mdp, 'r') as file:
-        filedata = file.read()
+        raw_markdown = file.read()
+    
+    yaml_pattern = r'^---\n(.*?)\n---'  # Regex to capture everything between '---' lines
+    match = re.search(yaml_pattern, raw_markdown, re.DOTALL)
+    raw_markdown_no_yaml = re.sub(yaml_pattern, '', raw_markdown, flags=re.DOTALL)
+    post_id = ''
+    tags_array = []
 
-    filedata = markdown.markdown(filedata)
+    if match:
+        yaml_data = yaml.safe_load(match.group(1))
+        tags_array = yaml_data.get('tags', [])
+        post_id = yaml_data.get('post_id', '-1')
+        try:
+            post_id = int(post_id)
+        except ValueError:
+            raise Exception("post_id should be integer.") 
+    else:
+        print("No YAML front matter found in the file.")
+
+    filedata = markdown.markdown(raw_markdown_no_yaml)
     filedata = markdown.markdown(filedata, extensions=['fenced_code','attr_list'])
-
-    #print(filedata)
-
     pattern = r'!\[\[(.*?)\]\]'
     updated_content = re.sub(pattern, replace_with_img_tag, filedata)
-    return updated_content
+
+    return {
+        "post_id" : post_id,
+        "processed_markdown" : updated_content,
+        "raw_markdown" : raw_markdown,
+        "tags" : tags_array,
+    }
 
 
 
-def sendNewPost(postData):
+def sendPost(postData):
 
     url = mainurl + "/wp-json/wp/v2/posts" 
+
+    if postData["post_id"] > -1:
+        url = mainurl + "/wp-json/wp/v2/posts/" + str(postData["post_id"])
 
     headers = {
         "Content-Type": "application/json"
@@ -184,24 +210,6 @@ def sftpupload(mdp):
 
     # Disconnect from SFTP
     sftp.disconnect()
-
-def postUpload(content, title, status, categories):
-
-    postData = {
-        "content": content,
-        "title" : title,
-        "slug" : mainurl,
-        "status" : status,
-        "categories" : categories,
-    }
-
-    response = sendNewPost(postData)
-
-    # Output the response
-    if response.status_code == 200 or response.status_code == 201:
-        print("Post updated successfully!")
-    else:
-        print(f"Error: {response.status_code}, {response.text}")
 
 ################################################################################################################
 ################################################################################################################
@@ -252,7 +260,23 @@ def main():
         print("Uploading post...")
         content = processMarkdown(mdp)
         title = Path(mdp).stem
-        postUpload(content, title, STATUS, CATEGORIES)
+
+        postData = {
+            "content": content["processed_markdown"],
+            "title" : title,
+            "slug" : mainurl,
+            "status" : STATUS,
+            "categories" : CATEGORIES,
+            "post_id" : content["post_id"] 
+        }
+
+        response = sendPost(postData)
+        responseData = json.loads(response.text)
+
+        if response.status_code == 200 or response.status_code == 201:
+            print("Post updated successfully!")
+        else:
+            print(f"Error: {response.status_code}, {response.text}")
 
     if UPLOAD_IMAGES:
         print("Uploading images...")

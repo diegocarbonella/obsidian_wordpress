@@ -264,7 +264,7 @@ def main():
         postData = {
             "content": content["processed_markdown"],
             "title" : title,
-            "slug" : mainurl,
+            "slug" : title,
             "status" : STATUS,
             "categories" : CATEGORIES,
             "post_id" : content["post_id"] 

@@ -1,7 +1,7 @@
 # Obsidian WordPress image uploader and content poster
 
-Simple Python script to upload markdown files as WordPress post. 
-Using WordPress API to post content and SFTP to upload images to WordPress server.
+Python script to upload markdown files as WordPress posts. 
+Use WordPress API to post content and SFTP to upload images to WordPress server.
 
 ## Example usage
 

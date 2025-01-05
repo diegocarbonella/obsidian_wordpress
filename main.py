@@ -143,14 +143,13 @@ def processMarkdown(mdp):
     else:
         print("No YAML front matter found in the file.")
 
-    filedata = markdown.markdown(raw_markdown_no_yaml)
-    filedata = markdown.markdown(filedata, extensions=['fenced_code','attr_list'])
+    filedata = markdown.markdown(raw_markdown_no_yaml, extensions=['fenced_code', 'codehilite'])
     pattern = r'!\[\[(.*?)\]\]'
-    updated_content = re.sub(pattern, replace_with_img_tag, filedata)
+    filedata = re.sub(pattern, replace_with_img_tag, filedata)
 
     return {
         "post_id" : post_id,
-        "processed_markdown" : updated_content,
+        "processed_markdown" : filedata,
         "raw_markdown" : raw_markdown,
         "tags" : tags_array,
     }
@@ -203,6 +202,13 @@ def sftpupload(mdp):
 ################################################################################################################
 ################################################################################################################
 ################################################################################################################
+
+def testMarkdownProcessing():
+
+    markdownContent = processMarkdown('test.md')
+
+    with open('test.html', 'wb+') as f:
+        f.write(markdownContent['processed_markdown'].encode())
 
 def main():
 

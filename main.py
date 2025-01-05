@@ -35,7 +35,6 @@ def get_filenames(md_file):
 class Sftp:
     def __init__(self, hostname, username, password, port=22):
         """Constructor Method"""
-        # Set connection object to None (initial value)
         self.connection = None
         self.hostname = hostname
         self.username = username
@@ -46,7 +45,6 @@ class Sftp:
         """Connects to the sftp server and returns the sftp connection object"""
 
         try:
-            # Get the sftp connection object
             self.connection = pysftp.Connection(
                 host=self.hostname,
                 username=self.username,
@@ -117,7 +115,7 @@ class Sftp:
             raise Exception(err)
 
 
-# Function to generate the replacement HTML
+# Function to generate the replacement HTML for images
 def replace_with_img_tag(match):
     filename = match.group(1)  # Extract the filename from the match
     return f'<img src="{wordpress_path}{filename}"/>'
@@ -170,12 +168,11 @@ def sendPost(postData):
         "Content-Type": "application/json"
     }
 
-    # Make the POST request
     response = requests.post(
         url,
         auth=HTTPBasicAuth(username, password),
         headers=headers,
-        json=postData  # Automatically converts the dictionary to JSON
+        json=postData
     )
 
     return response
@@ -191,7 +188,6 @@ def sftpupload(mdp):
         password=parsed_url.password,
     )
 
-    # Connect to SFTP
     sftp.connect()
 
     arr = get_filenames(mdp)
@@ -201,14 +197,6 @@ def sftpupload(mdp):
         remote_path_file = remote_path + f"{image_name2}.png"
         sftp.upload(local_path, remote_path_file)
 
-    # Lists files of SFTP location after upload
-    #print(f"List of files at location {remote_path}:")
-    #print([f for f in sftp.listdir(remote_path)])
-
-    # Download files from SFTP
-    #sftp.download(remote_path, os.path.join(remote_path, local_path + '.backup'))
-
-    # Disconnect from SFTP
     sftp.disconnect()
 
 ################################################################################################################

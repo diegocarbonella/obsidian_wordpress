@@ -13,7 +13,7 @@ from pathlib import Path
 from urllib.parse import urlparse
 from ENV_VARS import *
 
-def get_filenames(md_file):
+def getFilenames(md_file):
 
     with open(md_file, 'r') as file:
         filedata = file.read()
@@ -21,13 +21,13 @@ def get_filenames(md_file):
     pattern = r'!\[\[(.*?)\.png\]\]'
 
     # Find all image names in the file
-    image_names = re.findall(pattern, filedata)
+    imageNames = re.findall(pattern, filedata)
 
     arr = []
 
-    for image_name in image_names:
-        full_image_name = image_name
-        arr.append(full_image_name)
+    for imageName in imageNames:
+        fullImageName = imageName
+        arr.append(fullImageName)
 
     return arr
 
@@ -116,7 +116,7 @@ class Sftp:
 
 
 # Function to generate the replacement HTML for images
-def replace_with_img_tag(match):
+def replaceWithImgTag(match):
     filename = match.group(1)  # Extract the filename from the match
     return f'<img src="{wordpress_path}{filename}"/>'
 
@@ -126,29 +126,29 @@ def processMarkdown(mdp):
     with open(mdp, 'r') as file:
         raw_markdown = file.read()
     
-    yaml_pattern = r'^---\n(.*?)\n---'  # Regex to capture everything between '---' lines
-    match = re.search(yaml_pattern, raw_markdown, re.DOTALL)
-    raw_markdown_no_yaml = re.sub(yaml_pattern, '', raw_markdown, flags=re.DOTALL)
-    post_id = -1
+    yamlPattern = r'^---\n(.*?)\n---'  # Regex to capture everything between '---' lines
+    match = re.search(yamlPattern, raw_markdown, re.DOTALL)
+    rawMarkdownNoYaml = re.sub(yamlPattern, '', raw_markdown, flags=re.DOTALL)
+    postId = -1
     tags_array = []
 
     if match:
         yaml_data = yaml.safe_load(match.group(1))
         tags_array = yaml_data.get('tags', [])
-        post_id = yaml_data.get('post_id', '-1')
+        postId = yaml_data.get('post_id', '-1')
         try:
-            post_id = int(post_id)
+            postId = int(postId)
         except ValueError:
             raise Exception("post_id should be integer.") 
     else:
         print("No YAML front matter found in the file.")
 
-    filedata = markdown.markdown(raw_markdown_no_yaml, extensions=['fenced_code', 'codehilite'])
+    filedata = markdown.markdown(rawMarkdownNoYaml, extensions=['fenced_code', 'codehilite'])
     pattern = r'!\[\[(.*?)\]\]'
-    filedata = re.sub(pattern, replace_with_img_tag, filedata)
+    filedata = re.sub(pattern, replaceWithImgTag, filedata)
 
     return {
-        "post_id" : post_id,
+        "post_id" : postId,
         "processed_markdown" : filedata,
         "raw_markdown" : raw_markdown,
         "tags" : tags_array,
@@ -189,7 +189,7 @@ def sftpupload(mdp):
 
     sftp.connect()
 
-    arr = get_filenames(mdp)
+    arr = getFilenames(mdp)
 
     for image_name2 in arr:
         local_path = images_path + f"{image_name2}.png"

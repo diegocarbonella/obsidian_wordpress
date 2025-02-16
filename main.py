@@ -18,7 +18,7 @@ def getFilenames(md_file):
     with open(md_file, 'r') as file:
         filedata = file.read()
 
-    pattern = r'!\[\[(.*?)\.png\]\]'
+    pattern = r'!\[\[(.*?\.(?:png|gif|jpe?g))\]\]'
 
     # Find all image names in the file
     imageNames = re.findall(pattern, filedata)
@@ -192,8 +192,8 @@ def sftpupload(mdp):
     arr = getFilenames(mdp)
 
     for image_name2 in arr:
-        local_path = images_path + f"{image_name2}.png"
-        remote_path_file = remote_path + f"{image_name2}.png"
+        local_path = images_path + f"{image_name2}"
+        remote_path_file = remote_path + f"{image_name2}"
         sftp.upload(local_path, remote_path_file)
 
     sftp.disconnect()

@@ -143,7 +143,7 @@ def processMarkdown(mdp):
     else:
         print("No YAML front matter found in the file.")
 
-    filedata = markdown.markdown(rawMarkdownNoYaml, extensions=['fenced_code', 'codehilite'])
+    filedata = markdown.markdown(rawMarkdownNoYaml, extensions=['fenced_code', 'codehilite', 'tables'])
     pattern = r'!\[\[(.*?)\]\]'
     filedata = re.sub(pattern, replaceWithImgTag, filedata)
 
